@@ -109,6 +109,7 @@ func (*OSSMigrations) AddMigration(mg *Migrator) {
 	dashboardFolderMigrations.AddDashboardFolderMigrations(mg)
 
 	ssosettings.AddMigration(mg)
+	addPanelMigrations(mg)
 }
 
 func addStarMigrations(mg *Migrator) {
