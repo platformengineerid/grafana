@@ -195,6 +195,7 @@ type libraryElement struct {
 	OrgID int64 `json:"orgId"`
 	// Deprecated: use FolderUID instead
 	FolderID    int64                       `json:"folderId"`
+	FolderUID   string                      `json:"folderUid"`
 	UID         string                      `json:"uid"`
 	Name        string                      `json:"name"`
 	Kind        int64                       `json:"kind"`
