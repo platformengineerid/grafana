@@ -500,7 +500,7 @@ func flatPermissionsToResourcePermission(scope string, permissions []flatResourc
 		Created:          first.Created,
 		Updated:          first.Updated,
 		IsManaged:        first.IsManaged(),
-		IsInherited:      first.IsManaged() && first.Scope == scope,
+		IsInherited:      first.IsManaged() && first.Scope != scope,
 		IsServiceAccount: first.IsServiceAccount,
 	}
 }
