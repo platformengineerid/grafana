@@ -4,15 +4,15 @@ import (
 	"net/http"
 
 	sdkhttpclient "github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"github.com/grafana/grafana/pkg/infra/httpclient"
 	"github.com/grafana/grafana/pkg/infra/metrics/metricutil"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
-	datasourceRequestCounter = promauto.NewCounterVec(
+	datasourceRequestCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "grafana",
 			Name:      "datasource_request_total",
@@ -21,7 +21,7 @@ var (
 		[]string{"datasource", "datasource_type", "code", "method"},
 	)
 
-	datasourceRequestHistogram = promauto.NewHistogramVec(
+	datasourceRequestHistogram = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Namespace: "grafana",
 			Name:      "datasource_request_duration_seconds",
@@ -30,7 +30,7 @@ var (
 		}, []string{"datasource", "datasource_type", "code", "method"},
 	)
 
-	datasourceResponseHistogram = promauto.NewHistogramVec(
+	datasourceResponseHistogram = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Namespace: "grafana",
 			Name:      "datasource_response_size_bytes",
@@ -39,7 +39,7 @@ var (
 		}, []string{"datasource", "datasource_type"},
 	)
 
-	datasourceRequestsInFlight = promauto.NewGaugeVec(
+	datasourceRequestsInFlight = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "grafana",
 			Name:      "datasource_request_in_flight",
@@ -53,7 +53,13 @@ const DataSourceMetricsMiddlewareName = "metrics"
 
 var executeMiddlewareFunc = executeMiddleware
 
-func DataSourceMetricsMiddleware() sdkhttpclient.Middleware {
+func DataSourceMetricsMiddleware(r prometheus.Registerer) sdkhttpclient.Middleware {
+	r.MustRegister(
+		datasourceRequestCounter,
+		datasourceRequestHistogram,
+		datasourceResponseHistogram,
+		datasourceRequestsInFlight,
+	)
 	return sdkhttpclient.NamedMiddlewareFunc(DataSourceMetricsMiddlewareName, func(opts sdkhttpclient.Options, next http.RoundTripper) http.RoundTripper {
 		if opts.Labels == nil {
 			return next

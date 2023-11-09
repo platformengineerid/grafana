@@ -3,12 +3,15 @@ package httpclientprovider
 import (
 	"testing"
 
+	"github.com/prometheus/client_golang/prometheus"
+
 	"github.com/grafana/grafana/pkg/services/validations"
 
 	sdkhttpclient "github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
+	"github.com/stretchr/testify/require"
+
 	"github.com/grafana/grafana/pkg/infra/tracing"
 	"github.com/grafana/grafana/pkg/setting"
-	"github.com/stretchr/testify/require"
 )
 
 func TestHTTPClientProvider(t *testing.T) {
@@ -23,7 +26,7 @@ func TestHTTPClientProvider(t *testing.T) {
 			newProviderFunc = origNewProviderFunc
 		})
 		tracer := tracing.InitializeTracerForTest()
-		_ = New(&setting.Cfg{SigV4AuthEnabled: false}, &validations.OSSPluginRequestValidator{}, tracer)
+		_ = New(&setting.Cfg{SigV4AuthEnabled: false}, &validations.OSSPluginRequestValidator{}, tracer, prometheus.DefaultRegisterer)
 		require.Len(t, providerOpts, 1)
 		o := providerOpts[0]
 		require.Len(t, o.Middlewares, 8)
@@ -47,7 +50,7 @@ func TestHTTPClientProvider(t *testing.T) {
 			newProviderFunc = origNewProviderFunc
 		})
 		tracer := tracing.InitializeTracerForTest()
-		_ = New(&setting.Cfg{SigV4AuthEnabled: true}, &validations.OSSPluginRequestValidator{}, tracer)
+		_ = New(&setting.Cfg{SigV4AuthEnabled: true}, &validations.OSSPluginRequestValidator{}, tracer, prometheus.DefaultRegisterer)
 		require.Len(t, providerOpts, 1)
 		o := providerOpts[0]
 		require.Len(t, o.Middlewares, 9)
@@ -72,7 +75,7 @@ func TestHTTPClientProvider(t *testing.T) {
 			newProviderFunc = origNewProviderFunc
 		})
 		tracer := tracing.InitializeTracerForTest()
-		_ = New(&setting.Cfg{PluginSettings: setting.PluginSettings{"example": {"har_log_enabled": "true"}}}, &validations.OSSPluginRequestValidator{}, tracer)
+		_ = New(&setting.Cfg{PluginSettings: setting.PluginSettings{"example": {"har_log_enabled": "true"}}}, &validations.OSSPluginRequestValidator{}, tracer, prometheus.DefaultRegisterer)
 		require.Len(t, providerOpts, 1)
 		o := providerOpts[0]
 		require.Len(t, o.Middlewares, 9)

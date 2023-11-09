@@ -27,7 +27,7 @@ func TestDataSourceMetricsMiddleware(t *testing.T) {
 
 		ctx := &testContext{}
 		finalRoundTripper := ctx.createRoundTripper("finalrt")
-		mw := DataSourceMetricsMiddleware()
+		mw := DataSourceMetricsMiddleware(prometheus.DefaultRegisterer)
 		rt := mw.CreateMiddleware(httpclient.Options{}, finalRoundTripper)
 		require.NotNil(t, rt)
 		middlewareName, ok := mw.(httpclient.MiddlewareName)
@@ -65,7 +65,7 @@ func TestDataSourceMetricsMiddleware(t *testing.T) {
 
 		ctx := &testContext{}
 		finalRoundTripper := ctx.createRoundTripper("finalrt")
-		mw := DataSourceMetricsMiddleware()
+		mw := DataSourceMetricsMiddleware(prometheus.DefaultRegisterer)
 		rt := mw.CreateMiddleware(httpclient.Options{Labels: map[string]string{"test": "test"}}, finalRoundTripper)
 		require.NotNil(t, rt)
 		middlewareName, ok := mw.(httpclient.MiddlewareName)
@@ -105,7 +105,7 @@ func TestDataSourceMetricsMiddleware(t *testing.T) {
 
 		ctx := &testContext{}
 		finalRoundTripper := ctx.createRoundTripper("finalrt")
-		mw := DataSourceMetricsMiddleware()
+		mw := DataSourceMetricsMiddleware(prometheus.DefaultRegisterer)
 		rt := mw.CreateMiddleware(httpclient.Options{Labels: map[string]string{"datasource_name": "My Data Source 123", "datasource_type": "prometheus"}}, finalRoundTripper)
 		require.NotNil(t, rt)
 		middlewareName, ok := mw.(httpclient.MiddlewareName)

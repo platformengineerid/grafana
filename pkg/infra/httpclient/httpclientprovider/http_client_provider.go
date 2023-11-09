@@ -6,6 +6,7 @@ import (
 
 	sdkhttpclient "github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/mwitkow/go-conntrack"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/infra/metrics/metricutil"
@@ -17,12 +18,12 @@ import (
 var newProviderFunc = sdkhttpclient.NewProvider
 
 // New creates a new HTTP client provider with pre-configured middlewares.
-func New(cfg *setting.Cfg, validator validations.PluginRequestValidator, tracer tracing.Tracer) *sdkhttpclient.Provider {
+func New(cfg *setting.Cfg, validator validations.PluginRequestValidator, tracer tracing.Tracer, promReg prometheus.Registerer) *sdkhttpclient.Provider {
 	logger := log.New("httpclient")
 
 	middlewares := []sdkhttpclient.Middleware{
 		TracingMiddleware(logger, tracer),
-		DataSourceMetricsMiddleware(),
+		DataSourceMetricsMiddleware(promReg),
 		sdkhttpclient.ContextualMiddleware(),
 		SetUserAgentMiddleware(cfg.DataProxyUserAgent),
 		sdkhttpclient.BasicAuthenticationMiddleware(),
