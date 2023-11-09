@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/grafana/grafana/pkg/bus"
 	"github.com/grafana/grafana/pkg/events"
@@ -38,7 +39,8 @@ var tmplResetPassword = "reset_password"
 var tmplSignUpStarted = "signup_started"
 var tmplWelcomeOnSignUp = "welcome_on_signup"
 
-func ProvideService(bus bus.Bus, cfg *setting.Cfg, mailer Mailer, store TempUserStore) (*NotificationService, error) {
+func ProvideService(bus bus.Bus, cfg *setting.Cfg, mailer Mailer, store TempUserStore, promReg prometheus.Registerer) (*NotificationService, error) {
+	promReg.MustRegister(emailsSentTotal, emailsSentFailed)
 	ns := &NotificationService{
 		Bus:          bus,
 		Cfg:          cfg,

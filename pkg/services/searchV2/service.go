@@ -8,7 +8,6 @@ import (
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 
 	"github.com/grafana/grafana/pkg/infra/db"
 	"github.com/grafana/grafana/pkg/infra/log"
@@ -26,7 +25,7 @@ import (
 var (
 	namespace                               = "grafana"
 	subsystem                               = "search"
-	dashboardSearchNotServedRequestsCounter = promauto.NewCounterVec(
+	dashboardSearchNotServedRequestsCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: namespace,
 			Subsystem: subsystem,
@@ -35,7 +34,7 @@ var (
 		},
 		[]string{"reason"},
 	)
-	dashboardSearchFailureRequestsCounter = promauto.NewCounterVec(
+	dashboardSearchFailureRequestsCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: namespace,
 			Subsystem: subsystem,
@@ -44,14 +43,14 @@ var (
 		},
 		[]string{"reason"},
 	)
-	dashboardSearchSuccessRequestsDuration = promauto.NewHistogram(
+	dashboardSearchSuccessRequestsDuration = prometheus.NewHistogram(
 		prometheus.HistogramOpts{
 			Name:      "dashboard_search_successes_duration_seconds",
 			Buckets:   []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10, 25, 50, 100},
 			Namespace: namespace,
 			Subsystem: subsystem,
 		})
-	dashboardSearchFailureRequestsDuration = promauto.NewHistogram(
+	dashboardSearchFailureRequestsDuration = prometheus.NewHistogram(
 		prometheus.HistogramOpts{
 			Name:      "dashboard_search_failures_duration_seconds",
 			Buckets:   []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10, 25, 50, 100},
@@ -83,7 +82,13 @@ func (s *StandardSearchService) IsReady(ctx context.Context, orgId int64) IsSear
 
 func ProvideService(cfg *setting.Cfg, sql db.DB, entityEventStore store.EntityEventsService,
 	ac accesscontrol.Service, tracer tracing.Tracer, features featuremgmt.FeatureToggles, orgService org.Service,
-	userService user.Service, folderService folder.Service) SearchService {
+	userService user.Service, folderService folder.Service, promReg prometheus.Registerer) SearchService {
+	promReg.MustRegister(
+		dashboardSearchNotServedRequestsCounter,
+		dashboardSearchFailureRequestsCounter,
+		dashboardSearchSuccessRequestsDuration,
+		dashboardSearchFailureRequestsDuration,
+	)
 	extender := &NoopExtender{}
 	logger := log.New("searchV2")
 	s := &StandardSearchService{

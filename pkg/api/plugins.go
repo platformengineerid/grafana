@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 
@@ -36,7 +35,7 @@ import (
 
 // pluginsCDNFallbackRedirectRequests is a metric counter keeping track of how many
 // requests are received on the plugins CDN backend redirect fallback handler.
-var pluginsCDNFallbackRedirectRequests = promauto.NewCounterVec(prometheus.CounterOpts{
+var pluginsCDNFallbackRedirectRequests = prometheus.NewCounterVec(prometheus.CounterOpts{
 	Namespace: "grafana",
 	Name:      "plugins_cdn_fallback_redirect_requests_total",
 	Help:      "Number of requests to the plugins CDN backend redirect fallback handler.",

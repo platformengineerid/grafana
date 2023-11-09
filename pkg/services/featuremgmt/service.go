@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/services/licensing"
@@ -15,14 +14,17 @@ import (
 
 var (
 	// The values are updated each time
-	featureToggleInfo = promauto.NewGaugeVec(prometheus.GaugeOpts{
+	featureToggleInfo = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name:      "feature_toggles_info",
 		Help:      "info metric that exposes what feature toggles are enabled or not",
 		Namespace: "grafana",
 	}, []string{"name"})
 )
 
-func ProvideManagerService(cfg *setting.Cfg, licensing licensing.Licensing) (*FeatureManager, error) {
+func ProvideManagerService(cfg *setting.Cfg, licensing licensing.Licensing, promReg prometheus.Registerer) (*FeatureManager, error) {
+	if err := promReg.Register(featureToggleInfo); err != nil {
+		return nil, err
+	}
 	mgmt := &FeatureManager{
 		isDevMod:     setting.Env != setting.Prod,
 		licensing:    licensing,

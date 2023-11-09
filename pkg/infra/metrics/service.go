@@ -22,12 +22,10 @@ func (lw *logWrapper) Println(v ...any) {
 	lw.logger.Info("graphite metric bridge", v...)
 }
 
-func init() {
-	initMetricVars()
-	initFrontendMetrics()
-}
+func ProvideService(cfg *setting.Cfg, reg prometheus.Registerer) (*InternalMetricsService, error) {
+	initMetricVars(reg)
+	initFrontendMetrics(reg)
 
-func ProvideService(cfg *setting.Cfg) (*InternalMetricsService, error) {
 	s := &InternalMetricsService{
 		Cfg: cfg,
 	}

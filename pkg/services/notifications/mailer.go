@@ -11,27 +11,20 @@ import (
 	"net/mail"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 var (
-	emailsSentTotal  prometheus.Counter
-	emailsSentFailed prometheus.Counter
-)
-
-func init() {
-	emailsSentTotal = promauto.NewCounter(prometheus.CounterOpts{
+	emailsSentTotal prometheus.Counter = prometheus.NewCounter(prometheus.CounterOpts{
 		Name:      "emails_sent_total",
 		Help:      "Number of emails sent by Grafana",
 		Namespace: "grafana",
 	})
-
-	emailsSentFailed = promauto.NewCounter(prometheus.CounterOpts{
+	emailsSentFailed prometheus.Counter = prometheus.NewCounter(prometheus.CounterOpts{
 		Name:      "emails_sent_failed",
 		Help:      "Number of emails Grafana failed to send",
 		Namespace: "grafana",
 	})
-}
+)
 
 type Mailer interface {
 	Send(messages ...*Message) (int, error)
