@@ -156,6 +156,7 @@ import (
 	cloudmonitoring "github.com/grafana/grafana/pkg/tsdb/cloud-monitoring"
 	"github.com/grafana/grafana/pkg/tsdb/cloudwatch"
 	"github.com/grafana/grafana/pkg/tsdb/elasticsearch"
+	elasticsearchinstrumentation "github.com/grafana/grafana/pkg/tsdb/elasticsearch/instrumentation"
 	pyroscope "github.com/grafana/grafana/pkg/tsdb/grafana-pyroscope-datasource"
 	testdatasource "github.com/grafana/grafana/pkg/tsdb/grafana-testdata-datasource"
 	"github.com/grafana/grafana/pkg/tsdb/grafanads"
@@ -267,6 +268,8 @@ var wireBasicSet = wire.NewSet(
 	graphite.ProvideService,
 	prometheus.ProvideService,
 	elasticsearch.ProvideService,
+	elasticsearchinstrumentation.ProvideInstrumentation,
+	wire.Bind(new(elasticsearchinstrumentation.Instrumentation), new(*elasticsearchinstrumentation.InstrumentationImpl)),
 	pyroscope.ProvideService,
 	parca.ProvideService,
 	datasourceservice.ProvideCacheService,

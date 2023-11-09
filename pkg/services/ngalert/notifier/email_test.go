@@ -13,6 +13,7 @@ import (
 	alertingTemplates "github.com/grafana/alerting/templates"
 	"github.com/prometheus/alertmanager/template"
 	"github.com/prometheus/alertmanager/types"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/require"
 
@@ -261,7 +262,7 @@ func createEmailSender(t *testing.T) *emailSender {
 	cfg.Smtp.Host = "localhost:1234"
 	mailer := notifications.NewFakeMailer()
 
-	ns, err := notifications.ProvideService(bus, cfg, mailer, nil)
+	ns, err := notifications.ProvideService(bus, cfg, mailer, nil, prometheus.DefaultRegisterer)
 	require.NoError(t, err)
 
 	return &emailSender{ns: ns}

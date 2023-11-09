@@ -3,6 +3,7 @@ package featuremgmt
 import (
 	"testing"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 
 	"github.com/grafana/grafana/pkg/services/licensing"
@@ -38,7 +39,7 @@ func TestFeatureService(t *testing.T) {
 	require.True(t, license.FeatureEnabled("a.yes.default"))
 
 	cfg := setting.NewCfg()
-	mgmt, err := ProvideManagerService(cfg, license)
+	mgmt, err := ProvideManagerService(cfg, license, prometheus.DefaultRegisterer)
 	require.NoError(t, err)
 	require.NotNil(t, mgmt)
 

@@ -47,7 +47,7 @@ const (
 
 var searchWordsRegex = regexp.MustCompile(regexp.QuoteMeta(es.HighlightPreTagsString) + `(.*?)` + regexp.QuoteMeta(es.HighlightPostTagsString))
 
-func parseResponse(ctx context.Context, responses []*es.SearchResponse, targets []*Query, configuredFields es.ConfiguredFields, logger log.Logger, tracer tracing.Tracer) (*backend.QueryDataResponse, error) {
+func parseResponse(ctx context.Context, responses []*es.SearchResponse, targets []*Query, configuredFields es.ConfiguredFields, logger log.Logger, tracer tracing.Tracer, inst instrumentation.Instrumentation) (*backend.QueryDataResponse, error) {
 	result := backend.QueryDataResponse{
 		Responses: backend.Responses{},
 	}
@@ -113,7 +113,7 @@ func parseResponse(ctx context.Context, responses []*es.SearchResponse, targets 
 				resSpan.RecordError(err)
 				resSpan.SetStatus(codes.Error, err.Error())
 				logger.Error("Error processing buckets", "error", err, "query", string(mt), "aggregationsLength", len(res.Aggregations), "stage", es.StageParseResponse)
-				instrumentation.UpdatePluginParsingResponseDurationSeconds(ctx, time.Since(start), "error")
+				inst.UpdatePluginParsingResponseDurationSeconds(ctx, time.Since(start), "error")
 				resSpan.End()
 				return &backend.QueryDataResponse{}, err
 			}
@@ -122,7 +122,7 @@ func parseResponse(ctx context.Context, responses []*es.SearchResponse, targets 
 
 			result.Responses[target.RefID] = queryRes
 		}
-		instrumentation.UpdatePluginParsingResponseDurationSeconds(ctx, time.Since(start), "ok")
+		inst.UpdatePluginParsingResponseDurationSeconds(ctx, time.Since(start), "ok")
 		logger.Info("Finished processing of response", "duration", time.Since(start), "stage", es.StageParseResponse)
 		resSpan.End()
 	}

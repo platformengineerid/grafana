@@ -17,6 +17,7 @@ import (
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/infra/tracing"
 	es "github.com/grafana/grafana/pkg/tsdb/elasticsearch/client"
+	"github.com/grafana/grafana/pkg/tsdb/elasticsearch/instrumentation"
 )
 
 var update = flag.Bool("update", true, "update golden files")
@@ -3534,7 +3535,7 @@ func parseTestResponse(tsdbQueries map[string]string, responseBody string) (*bac
 		return nil, err
 	}
 
-	return parseResponse(context.Background(), response.Responses, queries, configuredFields, log.New("test.logger"), tracing.InitializeTracerForTest())
+	return parseResponse(context.Background(), response.Responses, queries, configuredFields, log.New("test.logger"), tracing.InitializeTracerForTest(), &instrumentation.NoOpInstrumentation{})
 }
 
 func requireTimeValue(t *testing.T, expected int64, frame *data.Frame, index int) {

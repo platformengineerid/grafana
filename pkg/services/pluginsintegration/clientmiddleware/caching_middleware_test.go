@@ -7,13 +7,15 @@ import (
 	"testing"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/grafana/grafana/pkg/plugins/manager/client/clienttest"
 	"github.com/grafana/grafana/pkg/services/caching"
 	"github.com/grafana/grafana/pkg/services/contexthandler"
 	"github.com/grafana/grafana/pkg/services/featuremgmt"
 	"github.com/grafana/grafana/pkg/services/user"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestCachingMiddleware(t *testing.T) {
@@ -24,7 +26,7 @@ func TestCachingMiddleware(t *testing.T) {
 		cs := caching.NewFakeOSSCachingService()
 		cdt := clienttest.NewClientDecoratorTest(t,
 			clienttest.WithReqContext(req, &user.SignedInUser{}),
-			clienttest.WithMiddlewares(NewCachingMiddleware(cs)),
+			clienttest.WithMiddlewares(NewCachingMiddleware(cs, prometheus.DefaultRegisterer)),
 		)
 
 		jsonDataMap := map[string]any{}
@@ -108,7 +110,7 @@ func TestCachingMiddleware(t *testing.T) {
 			asyncCdt := clienttest.NewClientDecoratorTest(t,
 				clienttest.WithReqContext(req, &user.SignedInUser{}),
 				clienttest.WithMiddlewares(
-					NewCachingMiddlewareWithFeatureManager(cs, featuremgmt.WithFeatures(featuremgmt.FlagAwsAsyncQueryCaching))),
+					NewCachingMiddlewareWithFeatureManager(cs, featuremgmt.WithFeatures(featuremgmt.FlagAwsAsyncQueryCaching), prometheus.DefaultRegisterer)),
 			)
 			t.Run("If shoudCacheQuery returns true update cache function is called", func(t *testing.T) {
 				origShouldCacheQuery := shouldCacheQuery
@@ -198,7 +200,7 @@ func TestCachingMiddleware(t *testing.T) {
 		cs := caching.NewFakeOSSCachingService()
 		cdt := clienttest.NewClientDecoratorTest(t,
 			clienttest.WithReqContext(req, &user.SignedInUser{}),
-			clienttest.WithMiddlewares(NewCachingMiddleware(cs)),
+			clienttest.WithMiddlewares(NewCachingMiddleware(cs, prometheus.DefaultRegisterer)),
 			clienttest.WithResourceResponses([]*backend.CallResourceResponse{simulatedPluginResponse}),
 		)
 
@@ -274,7 +276,7 @@ func TestCachingMiddleware(t *testing.T) {
 		cs := caching.NewFakeOSSCachingService()
 		cdt := clienttest.NewClientDecoratorTest(t,
 			// Skip the request context in this case
-			clienttest.WithMiddlewares(NewCachingMiddleware(cs)),
+			clienttest.WithMiddlewares(NewCachingMiddleware(cs, prometheus.DefaultRegisterer)),
 		)
 		reqCtx := contexthandler.FromContext(req.Context())
 		require.Nil(t, reqCtx)

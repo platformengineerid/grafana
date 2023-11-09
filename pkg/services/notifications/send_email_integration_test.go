@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 
 	"github.com/grafana/grafana/pkg/setting"
@@ -21,7 +22,7 @@ func TestEmailIntegrationTest(t *testing.T) {
 		cfg.Smtp.FromAddress = "from@address.com"
 		cfg.Smtp.FromName = "Grafana Admin"
 		cfg.Smtp.ContentTypes = []string{"text/html", "text/plain"}
-		ns, err := ProvideService(newBus(t), cfg, NewFakeMailer(), nil)
+		ns, err := ProvideService(newBus(t), cfg, NewFakeMailer(), nil, prometheus.DefaultRegisterer)
 		require.NoError(t, err)
 
 		t.Run("When sending reset email password", func(t *testing.T) {

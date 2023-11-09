@@ -9,6 +9,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/grafana/grafana-plugin-sdk-go/experimental"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 
 	"github.com/grafana/grafana/pkg/infra/tracing"
@@ -86,7 +87,7 @@ var (
 func service(t *testing.T) *StandardSearchService {
 	service, ok := ProvideService(&setting.Cfg{Search: setting.SearchSettings{}},
 		nil, nil, accesscontrolmock.New(), tracing.InitializeTracerForTest(), featuremgmt.WithFeatures(),
-		nil, nil, nil).(*StandardSearchService)
+		nil, nil, nil, prometheus.DefaultRegisterer).(*StandardSearchService)
 	require.True(t, ok)
 	return service
 }

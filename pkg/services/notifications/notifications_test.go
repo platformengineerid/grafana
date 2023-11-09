@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -283,7 +284,7 @@ func createSut(t *testing.T, bus bus.Bus) (*NotificationService, *FakeMailer) {
 
 func createSutWithConfig(t *testing.T, bus bus.Bus, cfg *setting.Cfg) (*NotificationService, *FakeMailer, error) {
 	smtp := NewFakeMailer()
-	ns, err := ProvideService(bus, cfg, smtp, nil)
+	ns, err := ProvideService(bus, cfg, smtp, nil, prometheus.DefaultRegisterer)
 	return ns, smtp, err
 }
 
@@ -292,7 +293,7 @@ func createDisconnectedSut(t *testing.T, bus bus.Bus) *NotificationService {
 
 	cfg := createSmtpConfig()
 	smtp := NewFakeDisconnectedMailer()
-	ns, err := ProvideService(bus, cfg, smtp, nil)
+	ns, err := ProvideService(bus, cfg, smtp, nil, prometheus.DefaultRegisterer)
 	require.NoError(t, err)
 	return ns
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/infra/tracing"
 	es "github.com/grafana/grafana/pkg/tsdb/elasticsearch/client"
+	"github.com/grafana/grafana/pkg/tsdb/elasticsearch/instrumentation"
 )
 
 const (
@@ -23,20 +24,22 @@ const (
 )
 
 type elasticsearchDataQuery struct {
-	client      es.Client
-	dataQueries []backend.DataQuery
-	logger      log.Logger
-	ctx         context.Context
-	tracer      tracing.Tracer
+	instrumentation instrumentation.Instrumentation
+	client          es.Client
+	dataQueries     []backend.DataQuery
+	logger          log.Logger
+	ctx             context.Context
+	tracer          tracing.Tracer
 }
 
-var newElasticsearchDataQuery = func(ctx context.Context, client es.Client, dataQuery []backend.DataQuery, logger log.Logger, tracer tracing.Tracer) *elasticsearchDataQuery {
+var newElasticsearchDataQuery = func(ctx context.Context, client es.Client, dataQuery []backend.DataQuery, logger log.Logger, tracer tracing.Tracer, inst instrumentation.Instrumentation) *elasticsearchDataQuery {
 	return &elasticsearchDataQuery{
-		client:      client,
-		dataQueries: dataQuery,
-		logger:      logger,
-		ctx:         ctx,
-		tracer:      tracer,
+		instrumentation: inst,
+		client:          client,
+		dataQueries:     dataQuery,
+		logger:          logger,
+		ctx:             ctx,
+		tracer:          tracer,
 	}
 }
 
@@ -77,7 +80,7 @@ func (e *elasticsearchDataQuery) execute() (*backend.QueryDataResponse, error) {
 		return errorsource.AddErrorToResponse(e.dataQueries[0].RefID, response, err), nil
 	}
 
-	return parseResponse(e.ctx, res.Responses, queries, e.client.GetConfiguredFields(), e.logger, e.tracer)
+	return parseResponse(e.ctx, res.Responses, queries, e.client.GetConfiguredFields(), e.logger, e.tracer, e.instrumentation)
 }
 
 func (e *elasticsearchDataQuery) processQuery(q *Query, ms *es.MultiSearchRequestBuilder, from, to int64) error {

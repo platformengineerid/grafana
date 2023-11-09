@@ -24,19 +24,22 @@ import (
 	"github.com/grafana/grafana/pkg/infra/tracing"
 	ngalertmodels "github.com/grafana/grafana/pkg/services/ngalert/models"
 	es "github.com/grafana/grafana/pkg/tsdb/elasticsearch/client"
+	"github.com/grafana/grafana/pkg/tsdb/elasticsearch/instrumentation"
 )
 
 var eslog = log.New("tsdb.elasticsearch")
 
 type Service struct {
+	instrumentation    instrumentation.Instrumentation
 	httpClientProvider httpclient.Provider
 	im                 instancemgmt.InstanceManager
 	tracer             tracing.Tracer
 	logger             *log.ConcreteLogger
 }
 
-func ProvideService(httpClientProvider httpclient.Provider, tracer tracing.Tracer) *Service {
+func ProvideService(httpClientProvider httpclient.Provider, tracer tracing.Tracer, inst instrumentation.Instrumentation) *Service {
 	return &Service{
+		instrumentation:    inst,
 		im:                 datasource.NewInstanceManager(newInstanceSettings(httpClientProvider)),
 		httpClientProvider: httpClientProvider,
 		tracer:             tracer,
@@ -54,11 +57,11 @@ func (s *Service) QueryData(ctx context.Context, req *backend.QueryDataRequest) 
 		return &backend.QueryDataResponse{}, err
 	}
 
-	return queryData(ctx, req.Queries, dsInfo, logger, s.tracer)
+	return queryData(ctx, req.Queries, dsInfo, logger, s.tracer, s.instrumentation)
 }
 
 // separate function to allow testing the whole transformation and query flow
-func queryData(ctx context.Context, queries []backend.DataQuery, dsInfo *es.DatasourceInfo, logger log.Logger, tracer tracing.Tracer) (*backend.QueryDataResponse, error) {
+func queryData(ctx context.Context, queries []backend.DataQuery, dsInfo *es.DatasourceInfo, logger log.Logger, tracer tracing.Tracer, inst instrumentation.Instrumentation) (*backend.QueryDataResponse, error) {
 	if len(queries) == 0 {
 		return &backend.QueryDataResponse{}, fmt.Errorf("query contains no queries")
 	}
@@ -67,7 +70,7 @@ func queryData(ctx context.Context, queries []backend.DataQuery, dsInfo *es.Data
 	if err != nil {
 		return &backend.QueryDataResponse{}, err
 	}
-	query := newElasticsearchDataQuery(ctx, client, queries, logger, tracer)
+	query := newElasticsearchDataQuery(ctx, client, queries, logger, tracer, inst)
 	return query.execute()
 }
 
