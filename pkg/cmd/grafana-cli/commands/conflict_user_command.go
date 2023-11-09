@@ -19,6 +19,7 @@ import (
 	"github.com/grafana/grafana/pkg/cmd/grafana-cli/logger"
 	"github.com/grafana/grafana/pkg/cmd/grafana-cli/utils"
 	"github.com/grafana/grafana/pkg/infra/db"
+	"github.com/grafana/grafana/pkg/infra/metrics"
 	"github.com/grafana/grafana/pkg/infra/tracing"
 	"github.com/grafana/grafana/pkg/services/accesscontrol"
 	"github.com/grafana/grafana/pkg/services/accesscontrol/acimpl"
@@ -86,7 +87,8 @@ func getSqlStore(cfg *setting.Cfg) (*sqlstore.SQLStore, error) {
 		return nil, fmt.Errorf("%v: %w", "failed to initialize tracer service", err)
 	}
 	bus := bus.ProvideBus(tracer)
-	return sqlstore.ProvideService(cfg, nil, &migrations.OSSMigrations{}, bus, tracer)
+	promRegisterer := metrics.ProvideRegisterer(cfg)
+	return sqlstore.ProvideService(cfg, nil, &migrations.OSSMigrations{}, bus, tracer, promRegisterer)
 }
 
 func runListConflictUsers() func(context *cli.Context) error {

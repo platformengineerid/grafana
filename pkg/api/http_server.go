@@ -205,6 +205,7 @@ type HTTPServer struct {
 	authnService         authn.Service
 	starApi              *starApi.API
 	promRegister         prometheus.Registerer
+	promGatherer         prometheus.Gatherer
 	clientConfigProvider grafanaapiserver.DirectRestConfigProvider
 }
 
@@ -247,7 +248,7 @@ func ProvideHTTPServer(opts ServerOptions, cfg *setting.Cfg, routeRegister routi
 	accesscontrolService accesscontrol.Service, navTreeService navtree.Service,
 	annotationRepo annotations.Repository, tagService tag.Service, searchv2HTTPService searchV2.SearchHTTPService, oauthTokenService oauthtoken.OAuthTokenService,
 	statsService stats.Service, authnService authn.Service, pluginsCDNService *pluginscdn.Service,
-	starApi *starApi.API, promRegister prometheus.Registerer, clientConfigProvider grafanaapiserver.DirectRestConfigProvider,
+	starApi *starApi.API, promRegister prometheus.Registerer, promGatherer prometheus.Gatherer, clientConfigProvider grafanaapiserver.DirectRestConfigProvider,
 ) (*HTTPServer, error) {
 	web.Env = cfg.Env
 	m := web.New()
@@ -347,6 +348,7 @@ func ProvideHTTPServer(opts ServerOptions, cfg *setting.Cfg, routeRegister routi
 		pluginsCDNService:            pluginsCDNService,
 		starApi:                      starApi,
 		promRegister:                 promRegister,
+		promGatherer:                 promGatherer,
 		clientConfigProvider:         clientConfigProvider,
 	}
 	if hs.Listener != nil {
@@ -646,7 +648,7 @@ func (hs *HTTPServer) metricsEndpoint(ctx *web.Context) {
 	}
 
 	promhttp.
-		HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{EnableOpenMetrics: true}).
+		HandlerFor(hs.promGatherer, promhttp.HandlerOpts{EnableOpenMetrics: true}).
 		ServeHTTP(ctx.Resp, ctx.Req)
 }
 

@@ -7,12 +7,13 @@ import (
 
 	"github.com/grafana/grafana-aws-sdk/pkg/awsds"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/prometheus/client_golang/prometheus"
+
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/plugins"
 	"github.com/grafana/grafana/pkg/services/caching"
 	"github.com/grafana/grafana/pkg/services/contexthandler"
 	"github.com/grafana/grafana/pkg/services/featuremgmt"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 // needed to mock the function for testing
@@ -20,18 +21,18 @@ var shouldCacheQuery = awsds.ShouldCacheQuery
 
 // NewCachingMiddleware creates a new plugins.ClientMiddleware that will
 // attempt to read and write query results to the cache
-func NewCachingMiddleware(cachingService caching.CachingService) plugins.ClientMiddleware {
-	return NewCachingMiddlewareWithFeatureManager(cachingService, nil)
+func NewCachingMiddleware(cachingService caching.CachingService, prometheusRegisterer prometheus.Registerer) plugins.ClientMiddleware {
+	return NewCachingMiddlewareWithFeatureManager(cachingService, nil, prometheusRegisterer)
 }
 
 // NewCachingMiddlewareWithFeatureManager creates a new plugins.ClientMiddleware that will
 // attempt to read and write query results to the cache with a feature manager
-func NewCachingMiddlewareWithFeatureManager(cachingService caching.CachingService, features *featuremgmt.FeatureManager) plugins.ClientMiddleware {
+func NewCachingMiddlewareWithFeatureManager(cachingService caching.CachingService, features *featuremgmt.FeatureManager, prometheusRegisterer prometheus.Registerer) plugins.ClientMiddleware {
 	log := log.New("caching_middleware")
-	if err := prometheus.Register(QueryCachingRequestHistogram); err != nil {
+	if err := prometheusRegisterer.Register(QueryCachingRequestHistogram); err != nil {
 		log.Error("Error registering prometheus collector 'QueryRequestHistogram'", "error", err)
 	}
-	if err := prometheus.Register(ResourceCachingRequestHistogram); err != nil {
+	if err := prometheusRegisterer.Register(ResourceCachingRequestHistogram); err != nil {
 		log.Error("Error registering prometheus collector 'ResourceRequestHistogram'", "error", err)
 	}
 	return plugins.ClientMiddlewareFunc(func(next plugins.Client) plugins.Client {

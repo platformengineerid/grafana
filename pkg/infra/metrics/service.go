@@ -3,10 +3,13 @@ package metrics
 import (
 	"context"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"k8s.io/component-base/metrics/legacyregistry"
+
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/infra/metrics/graphitebridge"
+	"github.com/grafana/grafana/pkg/services/featuremgmt"
 	"github.com/grafana/grafana/pkg/setting"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 var metricsLogger log.Logger = log.New("metrics")
@@ -55,5 +58,24 @@ func (im *InternalMetricsService) Run(ctx context.Context) error {
 	return ctx.Err()
 }
 
-func ProvideRegisterer() prometheus.Registerer        { return prometheus.DefaultRegisterer }
-func ProvideRegistererForTest() prometheus.Registerer { return prometheus.NewRegistry() }
+func ProvideRegisterer(cfg *setting.Cfg) prometheus.Registerer {
+	if cfg.IsFeatureToggleEnabled(featuremgmt.FlagGrafanaAPIServer) {
+		return legacyregistry.Registerer()
+	}
+	return prometheus.DefaultRegisterer
+}
+
+func ProvideGatherer(cfg *setting.Cfg) prometheus.Gatherer {
+	if cfg.IsFeatureToggleEnabled(featuremgmt.FlagGrafanaAPIServer) {
+		return legacyregistry.DefaultGatherer
+	}
+	return prometheus.DefaultGatherer
+}
+
+func ProvideRegistererForTest() prometheus.Registerer {
+	return prometheus.NewRegistry()
+}
+
+func ProvideGathererForTest(reg prometheus.Registerer) prometheus.Gatherer {
+	return reg.(*prometheus.Registry)
+}
