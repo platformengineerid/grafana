@@ -35,6 +35,7 @@ func TestGetLibraryElement(t *testing.T) {
 						ID:          1,
 						OrgID:       1,
 						FolderID:    1, // nolint:staticcheck
+						FolderUID:   "ScenarioFolder",
 						UID:         res.Result.UID,
 						Name:        "Text - Library Panel",
 						Kind:        int64(model.PanelElement),
@@ -132,6 +133,7 @@ func TestGetLibraryElement(t *testing.T) {
 						ID:          1,
 						OrgID:       1,
 						FolderID:    1, // nolint:staticcheck
+						FolderUID:   "ScenarioFolder",
 						UID:         res.Result.UID,
 						Name:        "Text - Library Panel",
 						Kind:        int64(model.PanelElement),
