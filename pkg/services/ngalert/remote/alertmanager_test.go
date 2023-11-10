@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-openapi/strfmt"
 	apimodels "github.com/grafana/grafana/pkg/services/ngalert/api/tooling/definitions"
+	"github.com/grafana/grafana/pkg/services/ngalert/notifier"
 	"github.com/grafana/grafana/pkg/util"
 	amv2 "github.com/prometheus/alertmanager/api/v2/models"
 	"github.com/stretchr/testify/require"
@@ -50,7 +51,7 @@ func TestNewAlertmanager(t *testing.T) {
 				TenantID:          test.tenantID,
 				BasicAuthPassword: test.password,
 			}
-			am, err := NewAlertmanager(cfg, test.orgID)
+			am, err := NewAlertmanager(cfg, test.orgID, nil)
 			if test.expErr != "" {
 				require.EqualError(tt, err, test.expErr)
 				return
@@ -83,7 +84,7 @@ func TestIntegrationRemoteAlertmanagerSilences(t *testing.T) {
 		TenantID:          tenantID,
 		BasicAuthPassword: password,
 	}
-	am, err := NewAlertmanager(cfg, 1)
+	am, err := NewAlertmanager(cfg, 1, nil)
 	require.NoError(t, err)
 
 	// We should have no silences at first.
@@ -162,7 +163,7 @@ func TestIntegrationRemoteAlertmanagerAlerts(t *testing.T) {
 		TenantID:          tenantID,
 		BasicAuthPassword: password,
 	}
-	am, err := NewAlertmanager(cfg, 1)
+	am, err := NewAlertmanager(cfg, 1, nil)
 	require.NoError(t, err)
 
 	// Wait until the Alertmanager is ready to send alerts.
@@ -224,7 +225,7 @@ func TestIntegrationRemoteAlertmanagerReceivers(t *testing.T) {
 		BasicAuthPassword: password,
 	}
 
-	am, err := NewAlertmanager(cfg, 1)
+	am, err := NewAlertmanager(cfg, 1, nil)
 	require.NoError(t, err)
 
 	// We should start with the default config.
@@ -233,7 +234,9 @@ func TestIntegrationRemoteAlertmanagerReceivers(t *testing.T) {
 	require.Equal(t, "empty-receiver", *rcvs[0].Name)
 
 	// After changing the configuration, we should have a new `discord` receiver.
-	require.NoError(t, am.postConfig(context.Background(), upstreamConfig))
+	remoteCfg, err := notifier.Load([]byte(upstreamConfig))
+	require.NoError(t, err)
+	require.NoError(t, am.postConfig(context.Background(), remoteCfg))
 	require.Eventually(t, func() bool {
 		rcvs, err = am.GetReceivers(context.Background())
 		require.NoError(t, err)
