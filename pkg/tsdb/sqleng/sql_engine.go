@@ -23,9 +23,6 @@ import (
 	"github.com/grafana/grafana/pkg/util/errutil"
 )
 
-// XormDriverMu is used to allow safe concurrent registering and querying of drivers in xorm
-var XormDriverMu sync.RWMutex
-
 // MetaKeyExecutedQueryString is the key where the executed query should get stored
 const MetaKeyExecutedQueryString = "executedQueryString"
 
