@@ -9,7 +9,6 @@ import (
 	"time"
 
 	sdkproxy "github.com/grafana/grafana-plugin-sdk-go/backend/proxy"
-	"github.com/grafana/grafana/pkg/tsdb/sqleng"
 	"github.com/grafana/grafana/pkg/util"
 	"github.com/lib/pq"
 	"golang.org/x/net/proxy"
@@ -18,9 +17,6 @@ import (
 // createPostgresProxyDriver creates and registers a new sql driver that uses a postgres connector and updates the dialer to
 // route connections through the secure socks proxy
 func createPostgresProxyDriver(cnnstr string, opts *sdkproxy.Options) (string, error) {
-	sqleng.XormDriverMu.Lock()
-	defer sqleng.XormDriverMu.Unlock()
-
 	// create a unique driver per connection string
 	hash, err := util.Md5SumString(cnnstr)
 	if err != nil {
